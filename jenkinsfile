@@ -28,8 +28,7 @@ pipeline {
       }
     }
     
-    stage('Checkout')
-    {
+    stage('Checkout SCM'){
       steps {
         script {
             checkout scmGit(branches: [[name: '**']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/earchibong/php-todo.git']])
