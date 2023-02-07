@@ -49,42 +49,13 @@ pipeline {
                     IMAGE = "$PROJECT:$VERSION"
                 }
             }
-      }   
-
-    stage('Build For Dev Environment') {
-               when { branch pattern: "^feature.*|^bug.*|^dev", comparator: "REGEXP"}
-            
-        steps {
-            echo 'Build Dockerfile....'
-            script {
-                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
-                sh "docker build --network=host -t $IMAGE ."
-                docker.withRegistry("https://$ECRURL"){
-                docker.image("$IMAGE").push("dev-$BUILD_NUMBER")
-            }
-            }
-        }
-      }
-
-    stage('Build For Staging Environment') {
-            when {
-                expression { BRANCH_NAME ==~ /(staging|develop)/ }
-            }
-        steps {
-            echo 'Build Dockerfile....'
-            script {
-                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
-                sh "docker build --network=host -t $IMAGE ."
-                docker.withRegistry("https://$ECRURL"){
-                docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
-                }
-            }
-        }
-    }
+      }  
 
 
-    stage('Build For Production Environment') {
-        when { tag "release-*" }
+    stage('Build And Deploy') {
+        //when { 
+           // expression { BRANCH_NAME ==~ /jenkins-ecr\/[0-9]+\.[0-9]+\.[0-9]+/ }
+        //}
         steps {
             echo 'Build Dockerfile....'
             script {
