@@ -5,7 +5,7 @@ pipeline {
     {
         PROJECT     = 'php-todo'
         ECRURL      = '350100602815.dkr.ecr.eu-west-2.amazonaws.com/php-todo'
-        DEPLOY_TO = 'develop'
+        DEPLOY_TO = 'main'
     }
 
   stages {
@@ -27,7 +27,7 @@ pipeline {
         extensions: [],
         submoduleCfg: [], 
         branches: [[name: 'main']],
-        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'']] 	
+        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'6ee1760b-3125-4f8a-83c6-f0caed735894']] 	
         ])
         
       }
@@ -50,5 +50,60 @@ pipeline {
                 }
             }
       }   
+
+    stage('Build For Dev Environment') {
+               when { branch pattern: "^feature.*|^bug.*|^dev", comparator: "REGEXP"}
+            
+        steps {
+            echo 'Build Dockerfile....'
+            script {
+                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
+                sh "docker build --network=host -t $IMAGE ."
+                docker.withRegistry("https://$ECRURL"){
+                docker.image("$IMAGE").push("dev-$BUILD_NUMBER")
+            }
+            }
+        }
+      }
+
+    stage('Build For Staging Environment') {
+            when {
+                expression { BRANCH_NAME ==~ /(staging|develop)/ }
+            }
+        steps {
+            echo 'Build Dockerfile....'
+            script {
+                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
+                sh "docker build --network=host -t $IMAGE ."
+                docker.withRegistry("https://$ECRURL"){
+                docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
+                }
+            }
+        }
+    }
+
+
+    stage('Build For Production Environment') {
+        when { tag "release-*" }
+        steps {
+            echo 'Build Dockerfile....'
+            script {
+                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
+                // sh "docker build --network=host -t $IMAGE -f deploy/docker/Dockerfile ."
+                sh "docker build --network=host -t $IMAGE ."
+                docker.withRegistry("https://$ECRURL"){
+                docker.image("$IMAGE").push("prod-$BUILD_NUMBER")
+                }
+            }
+        }
+    }
   }
-}
+
+        post
+    {
+        always
+        {
+            sh "docker rmi -f $IMAGE "
+        }
+    }
+} 
