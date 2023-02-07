@@ -28,6 +28,7 @@ pipeline {
             sh(label: 'AWS ECR login', script:
                '''
                #!/bin/bash
+               sudo chmod 666 /var/run/docker.run
                eval $(aws ecr get-login-password —-region ${AWS_DEFAULT_REGION} | docker login —-username AWS —-password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com)
                '''.stripIndent())
         }
