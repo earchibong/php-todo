@@ -1,0 +1,53 @@
+  
+pipeline {
+  agent any
+
+      environment 
+    {
+        AWS_ACCOUNT_ID = 'your IAM role account ID'
+        AWS_DEFAULT_REGION = 'your region for ECR container'
+        IMAGE_REPO_NAME = 'your ECR repo name'
+        IMAGE_TAG = 'latest'
+        REPOSITORY_URI = '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}'
+    }
+
+  stages {
+
+    stage("Initial cleanup") {
+        steps {
+        dir("${WORKSPACE}") {
+            deleteDir()
+        }
+        }
+    }
+
+    stage('Logging into AWS ECR'){
+      steps {
+        script {
+            sh "aws ecr get-login-password — region ${AWS_DEFAULT_REGION} | docker login — username AWS — password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+        }
+      }
+    }
+    
+    stage('Checkout SCM'){
+      steps {
+        checkout([
+        $class: 'GitSCM', 
+        doGenerateSubmoduleConfigurations: false, 
+        extensions: [],
+        submoduleCfg: [], 
+        branches: [[name: 'main']],
+        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'']] 	
+        ])  
+      }
+    }
+
+    stage('Build Image') {
+        steps {
+            script {
+                dockerImage = docker.build '${IMAGE_REPO_NAME}:${IMAGE_TAG}'
+            }
+        }
+    }
+  }
+}
