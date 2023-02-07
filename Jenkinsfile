@@ -71,6 +71,7 @@ pipeline {
             echo 'Build Dockerfile....'
             script {
                 //dockerImage = docker.build '${IMAGE_REPO_NAME}:${IMAGE_TAG}'
+                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
                 sh "docker build --network=host -t $IMAGE ."
             }
         }
