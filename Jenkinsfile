@@ -31,14 +31,7 @@ pipeline {
     
     stage('Checkout SCM'){
       steps {
-        checkout([
-        $class: 'GitSCM', 
-        doGenerateSubmoduleConfigurations: false, 
-        extensions: [],
-        submoduleCfg: [], 
-        branches: [[name: 'main']],
-        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'']] 	
-        ])  
+            git branch: 'main', url: 'https://github.com/earchibong/php-todo.git'
       }
     }
 
