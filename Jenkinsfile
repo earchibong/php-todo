@@ -1,11 +1,14 @@
+  
 pipeline {
   agent any
 
       environment 
     {
-        PROJECT     = 'php-todo'
-        ECRURL      = '350100602815.dkr.ecr.eu-west-2.amazonaws.com/php-todo'
-        DEPLOY_TO = 'develop'
+        AWS_ACCOUNT_ID = ' 350100602815'
+        AWS_DEFAULT_REGION = 'eu-west-2'
+        IMAGE_REPO_NAME = 'php-todo'
+        IMAGE_TAG = 'latest'
+        REPOSITORY_URI = '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}'
     }
 
   stages {
@@ -18,92 +21,33 @@ pipeline {
         }
     }
 
-    stage('Checkout')
-    {
+    stage('Logging into AWS ECR'){
       steps {
-      checkout([
+        script {
+            sh "aws ecr get-login-password — region ${AWS_DEFAULT_REGION} | docker login — username AWS — password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+        }
+      }
+    }
+    
+    stage('Checkout SCM'){
+      steps {
+        checkout([
         $class: 'GitSCM', 
         doGenerateSubmoduleConfigurations: false, 
         extensions: [],
         submoduleCfg: [], 
-        branches: [[name: 'develop']],
-        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'6ee1760b-3125-4f8a-83c6-f0caed735894']] 	
-        ])
-        
+        branches: [[name: 'main']],
+        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'']] 	
+        ])  
       }
-        }
-
-    stage('Build preparations')
-      {
-        steps
-          {
-              script 
-                {
-                    // calculate GIT lastest commit short-hash
-                    gitCommitHash = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-                    shortCommitHash = gitCommitHash.take(7)
-                    // calculate a sample version tag
-                    VERSION = shortCommitHash
-                    // set the build display name
-                    currentBuild.displayName = "#${BUILD_ID}-${VERSION}"
-                    IMAGE = "$PROJECT:$VERSION"
-                }
-            }
-      }   
-
-    stage('Build For Dev Environment') {
-               when { branch pattern: "^feature.*|^bug.*|^dev", comparator: "REGEXP"}
-            
-        steps {
-            echo 'Build Dockerfile....'
-            script {
-                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
-                sh "docker build --network=host -t $IMAGE ."
-                docker.withRegistry("https://$ECRURL"){
-                docker.image("$IMAGE").push("dev-$BUILD_NUMBER")
-            }
-            }
-        }
-      }
-
-    stage('Build For Staging Environment') {
-            when {
-                expression { BRANCH_NAME ==~ /(staging|develop)/ }
-            }
-        steps {
-            echo 'Build Dockerfile....'
-            script {
-                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
-                sh "docker build --network=host -t $IMAGE ."
-                docker.withRegistry("https://$ECRURL"){
-                docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
-                }
-            }
-        }
     }
 
-
-    stage('Build For Production Environment') {
-        when { tag "release-*" }
+    stage('Build Image') {
         steps {
-            echo 'Build Dockerfile....'
             script {
-                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
-                // sh "docker build --network=host -t $IMAGE -f deploy/docker/Dockerfile ."
-                sh "docker build --network=host -t $IMAGE ."
-                docker.withRegistry("https://$ECRURL"){
-                docker.image("$IMAGE").push("prod-$BUILD_NUMBER")
-                }
+                dockerImage = docker.build '${IMAGE_REPO_NAME}:${IMAGE_TAG}'
             }
         }
     }
   }
-
-        post
-    {
-        always
-        {
-            sh "docker rmi -f $IMAGE "
-        }
-    }
-} 
+}
