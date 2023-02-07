@@ -9,6 +9,7 @@ pipeline {
         IMAGE_REPO_NAME = 'php-todo'
         IMAGE_TAG = 'latest'
         REPOSITORY_URI = '${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}'
+        PROJECT = 'php-todo'
     }
 
   stages {
@@ -47,12 +48,30 @@ pipeline {
       }
     }
 
+    stage('Build preparations')
+      {
+        steps
+          {
+              script 
+                {
+                    // calculate GIT lastest commit short-hash
+                    gitCommitHash = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                    shortCommitHash = gitCommitHash.take(7)
+                    // calculate a sample version tag
+                    VERSION = shortCommitHash
+                    // set the build display name
+                    currentBuild.displayName = "#${BUILD_ID}-${VERSION}"
+                    IMAGE = "$PROJECT:$VERSION"
+                }
+            }
+      }   
+
     stage('Build Image') {
         steps {
             echo 'Build Dockerfile....'
             script {
-                dockerImage = docker.build '${IMAGE_REPO_NAME}:${IMAGE_TAG}'
-                //sh "docker build --network=host -t $IMAGE_REPO_NAME:$IMAGE_TAG ."
+                //dockerImage = docker.build '${IMAGE_REPO_NAME}:${IMAGE_TAG}'
+                sh "docker build --network=host -t $IMAGE ."
             }
         }
     }
