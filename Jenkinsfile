@@ -5,7 +5,7 @@ pipeline {
     {
         PROJECT     = 'php-todo'
         ECRURL      = '350100602815.dkr.ecr.eu-west-2.amazonaws.com/php-todo'
-        DEPLOY_TO = 'main'
+        DEPLOY_TO = 'develop'
     }
 
   stages {
@@ -26,8 +26,8 @@ pipeline {
         doGenerateSubmoduleConfigurations: false, 
         extensions: [],
         submoduleCfg: [], 
-        branches: [[name: 'main']],
-        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'6ee1760b-3125-4f8a-83c6-f0caed735894']] 	
+        branches: [[name: 'develop']],
+        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'']] 	
         ])
         
       }
