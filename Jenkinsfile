@@ -26,7 +26,7 @@ pipeline {
         doGenerateSubmoduleConfigurations: false, 
         extensions: [],
         submoduleCfg: [], 
-        branches: [[name: 'develop']],
+        branches: branches: [[name: '*/main'], [name: '*/develop'], [name: '*/feature']],
         userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'23ef1a81-ff88-4724-9462-8134b6d8ad86']] 	
         ])
         
@@ -67,8 +67,8 @@ pipeline {
       }
 
     stage('Build & Deploy For Feature Environment') {
-            when {
-                expression { BRANCH_NAME ==~ /(staging|develop)/ }
+            when { 
+            expression { BRANCH_NAME ==~ /feature\/[0-9]+\.[0-9]+\.[0-9]+/ }
             }
         steps {
             echo 'Build Dockerfile....'
