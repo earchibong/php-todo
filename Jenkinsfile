@@ -26,8 +26,8 @@ pipeline {
         doGenerateSubmoduleConfigurations: false, 
         extensions: [],
         submoduleCfg: [], 
-        branches: [[name: 'main']],
-        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'']] 	
+        branches: [[name: 'develop']],
+        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'23ef1a81-ff88-4724-9462-8134b6d8ad86']] 	
         ])
         
       }
@@ -49,13 +49,42 @@ pipeline {
                     IMAGE = "$PROJECT:$VERSION"
                 }
             }
-      }  
+      }   
+
+    stage('Build & Deploy For Dev Environment') {
+               when { branch pattern: "^feature.*|^bug.*|^dev", comparator: "REGEXP"}
+            
+        steps {
+            echo 'Build Dockerfile....'
+            script {
+                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
+                sh "docker build --network=host -t $IMAGE ."
+                docker.withRegistry("https://$ECRURL"){
+                docker.image("$IMAGE").push("dev-$BUILD_NUMBER")
+            }
+            }
+        }
+      }
+
+    stage('Build & Deploy For Feature Environment') {
+            when {
+                expression { BRANCH_NAME ==~ /(staging|develop)/ }
+            }
+        steps {
+            echo 'Build Dockerfile....'
+            script {
+                sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
+                sh "docker build --network=host -t $IMAGE ."
+                docker.withRegistry("https://$ECRURL"){
+                docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
+                }
+            }
+        }
+    }
 
 
-    stage('Build And Deploy') {
-        //when { 
-           // expression { BRANCH_NAME ==~ /jenkins-ecr\/[0-9]+\.[0-9]+\.[0-9]+/ }
-        //}
+    stage('Build For Production Environment') {
+        when { tag "release-*" }
         steps {
             echo 'Build Dockerfile....'
             script {
