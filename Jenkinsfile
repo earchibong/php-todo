@@ -21,15 +21,11 @@ pipeline {
     stage('Checkout')
     {
       steps {
-      checkout([
-        $class: 'GitSCM', 
-        doGenerateSubmoduleConfigurations: false, 
-        extensions: [],
-        submoduleCfg: [], 
-        branches: [[name: '*/develop']]
-        userRemoteConfigs: [[url: "https://github.com/earchibong/php-todo.git ",credentialsId:'23ef1a81-ff88-4724-9462-8134b6d8ad86']] 	
-        ])
-        
+      checkout scmGit(
+        branches: [[name: '*/develop'], [name: '*/feature']], 
+        extensions: [], 
+        userRemoteConfigs: [[credentialsId: '23ef1a81-ff88-4724-9462-8134b6d8ad86', url: 'https://github.com/earchibong/php-todo.git']]
+        )
       }
         }
 
