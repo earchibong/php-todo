@@ -2,6 +2,13 @@
 FROM php:7-apache
 LABEL MAINTAINER Libby
 
+#ENV DB_HOST=mysqlserverhost
+#ENV DB_DATABASE=toolingdb
+#ENV DB_USERNAME=libby
+#ENV ENV DB_PASSWORD=devopspbl
+#ENV DB_CONNECTION=mysql
+#ENV DB_PORT=3306
+
 #install all the dependencies
 RUN apt update
 RUN apt install zip git nginx -y
