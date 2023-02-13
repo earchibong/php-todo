@@ -76,7 +76,6 @@ pipeline {
                 }
             }
         }
-    }
 
     stage('Test For Staging Environment') {
         when {
@@ -97,7 +96,7 @@ pipeline {
         }
     }
 
-    stage('Deploy For Staging Environment') {
+    stage('Deploy For Staging Environment'){
         when {
             expression { bBRANCH_NAME ==~ /(staging|develop)/}
         }
@@ -107,10 +106,13 @@ pipeline {
               sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')")
               docker.withRegistry("https://$ECRURL"){
               docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")  
+              }
             }
-        }
 
+        }
     }
+
+
     stage('Build For Production Environment') {
         when { tag "release-*" }
         steps {
