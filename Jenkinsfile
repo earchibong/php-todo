@@ -83,7 +83,7 @@ pipeline {
         }
 
         steps {
-            final String url = "http://localhost:8085"
+            final String url = "http://localhost:8085" {
             //final String response = sh(script: "curl -s $url", returnStdout: true).trim()
                 final def (String response, int code) =
                   sh(script: "curl -s -w '\\n%{response_code}' $url ", returnStdout: true).trim()
@@ -91,6 +91,7 @@ pipeline {
             echo "HTTP response status code: $code"
             if (code == 200) {
                 echo response
+            }
             }
 
         }
