@@ -71,14 +71,46 @@ pipeline {
             script {
                 sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
                 sh "docker build --network=host -t $IMAGE ."
-                docker.withRegistry("https://$ECRURL"){
-                docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
+                //docker.withRegistry("https://$ECRURL"){
+                //docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
                 }
             }
         }
     }
 
+    stage('Test For Staging Environment') {
+        when {
+            expression { BRANCH_NAME ==~ /(staging|develop)/}
+        }
 
+        steps {
+            final String url = "http://localhost:8085"
+            //final String response = sh(script: "curl -s $url", returnStdout: true).trim()
+                final def (String response, int code) =
+                  sh(script: "curl -s -w '\\n%{response_code}' $url ", returnStdout: true).trim()
+            
+            echo "HTTP response status code: $code"
+            if (code == 200) {
+                echo response
+            }
+
+        }
+    }
+
+    stage('Deploy For Staging Environment') {
+        when {
+            expression { bBRANCH_NAME ==~ /(staging|develop)/}
+        }
+
+        steps{
+            script{
+              sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')")
+              docker.withRegistry("https://$ECRURL"){
+              docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")  
+            }
+        }
+
+    }
     stage('Build For Production Environment') {
         when { tag "release-*" }
         steps {
