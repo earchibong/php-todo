@@ -83,15 +83,18 @@ pipeline {
         }
 
         steps {
-            final String url = "http://localhost:8085" {
-            //final String response = sh(script: "curl -s $url", returnStdout: true).trim()
-                final def (String response, int code) =
-                  sh(script: "curl -s -w '\\n%{response_code}' $url ", returnStdout: true).trim()
-            
-            echo "HTTP response status code: $code"
-            if (code == 200) {
-                echo response
-            }
+            final String url = "http://localhost:8085"
+
+                    withCredentials([usernameColonPassword(credentialsId: "jenkins-api-token", variable: "API_TOKEN")]) {
+                        final def (String response, int code) =
+                            sh(script: "curl -s -w '\\n%{response_code}' -u $API_TOKEN $url", returnStdout: true)
+                                .trim()
+                                .tokenize("\n")
+
+                        echo "HTTP response status code: $code"
+
+                        if (code == 200) {
+                            echo response
             }
 
         }
