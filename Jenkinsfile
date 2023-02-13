@@ -71,7 +71,7 @@ pipeline {
             script {
                 sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
                 sh "docker build --network=host -t $IMAGE ."
-                sh "docker run --network=host -p 5001:80 -it $IMAGE"
+                sh "docker run $IMAGE"
                 //docker.withRegistry("https://$ECRURL"){
                 //docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
                 }
