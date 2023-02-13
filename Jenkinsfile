@@ -71,7 +71,7 @@ pipeline {
             script {
                 sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
                 sh "docker build --network=host -t $IMAGE ."
-                sh "docker run --network=host -p 8085:80 -it $IMAGE"
+                sh "docker run --network=host -p 5001:80 -it $IMAGE"
                 //docker.withRegistry("https://$ECRURL"){
                 //docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
                 }
@@ -85,7 +85,7 @@ pipeline {
 
         steps {
             script{
-                def response = sh(script: 'curl https://localhost:8085', returnStdout: true)
+                def response = sh(script: 'curl https://localhost:5001', returnStdout: true)
 
                 echo "HTTP response status code: $code"
                     if (code == 200) {
