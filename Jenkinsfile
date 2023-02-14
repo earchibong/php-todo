@@ -85,10 +85,8 @@ pipeline {
 
         steps {
             script{
-                cmd = """
-                    'curl https://localhost:8085'
-                    """
-                code = sh(script: cmd, -w '\\n%{response_code}' returnStdout: true).trim()
+
+                code = sh(script:'curl https://localhost:8085', -w '\\n%{response_code}' returnStdout: true).trim()
                 echo "HTTP response status code: $code"
 
                         if (code == 200) {
