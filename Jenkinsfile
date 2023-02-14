@@ -85,13 +85,13 @@ pipeline {
 
         steps {
             script{
+                //curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080
+                code = sh(script:'curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
+                //echo "HTTP response status code: $code"
 
-                code = sh(script:'curl http://localhost:8080', returnStdout: true).trim()
-                echo "HTTP response status code: $code"
-
-                        if (code == 200) {
-                            echo response
-                        }
+                        //if (code == 200) {
+                        //    echo response
+                        //}
             }           
         }
     }
@@ -103,7 +103,7 @@ pipeline {
 
         steps{
             script{
-              sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')")
+              //sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')")
               docker.withRegistry("https://$ECRURL"){
               docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")  
               }
