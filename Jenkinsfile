@@ -86,8 +86,8 @@ pipeline {
         steps {
             script{
                 //curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080
-                sh(script:'curl --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
-                //echo "HTTP response status code: $code"
+                code = sh(script:'curl --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
+                echo "HTTP response status code: $code"
 
                         //if (code == 200) {
                            // echo code
