@@ -86,12 +86,12 @@ pipeline {
         steps {
             script{
                 //curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080
-                code = sh(script:'curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
+                sh('curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
                 //echo "HTTP response status code: $code"
 
                         //if (code == 200) {
-                        //    echo response
-                        //}
+                           // echo code
+                       // }
             }           
         }
     }
