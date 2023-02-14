@@ -26,6 +26,7 @@ pipeline {
         extensions: [], 
         userRemoteConfigs: [[credentialsId: '23ef1a81-ff88-4724-9462-8134b6d8ad86', url: 'https://github.com/earchibong/php-todo.git']]
         )
+        
       }
         }
 
@@ -47,14 +48,20 @@ pipeline {
             }
       }   
 
-    stage('Build For Dev Environment') {
-               when { branch pattern: "^feature.*|^bug.*|^dev", comparator: "REGEXP"}
+    stage('Build & Deploy For Dev Environment') {
+               when { 
+                expression { BRANCH_NAME ==~ /(staging|develop)/ }
+                }
             
         steps {
             echo 'Build Dockerfile....'
             script {
                 sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
                 sh "docker build --network=host -t $IMAGE ."
+
+                code = sh(script:'curl --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
+                echo "HTTP response status code: $code"
+                
                 docker.withRegistry("https://$ECRURL"){
                 docker.image("$IMAGE").push("dev-$BUILD_NUMBER")
             }
@@ -62,53 +69,19 @@ pipeline {
         }
       }
 
-    stage('Build For Staging Environment') {
-            when {
-                expression { BRANCH_NAME ==~ /(staging|develop)/ }
+    stage('Build & Deploy For Feature Environment') {
+            when { 
+            expression { BRANCH_NAME ==~ /feature\/[0-9]+\.[0-9]+\.[0-9]+/ }
             }
         steps {
             echo 'Build Dockerfile....'
             script {
                 sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')") 
                 sh "docker build --network=host -t $IMAGE ."
-                //sh "docker run $IMAGE"
-                //docker.withRegistry("https://$ECRURL"){
-                //docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
+                docker.withRegistry("https://$ECRURL"){
+                docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")
                 }
             }
-        }
-
-    stage('Test For Staging Environment') {
-        when {
-            expression { BRANCH_NAME ==~ /(staging|develop)/}
-        }
-
-        steps {
-            script{
-                //curl --head --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080
-                code = sh(script:'curl --location --silent --output /dev/null --write-out "%{http_code}\n" http://localhost:8080', returnStdout: true).trim()
-                echo "HTTP response status code: $code"
-
-                        //if (code == 200) {
-                           // echo code
-                       // }
-            }           
-        }
-    }
-
-    stage('Deploy For Staging Environment'){
-        when {
-            expression { bBRANCH_NAME ==~ /(staging|develop)/}
-        }
-
-        steps{
-            script{
-              //sh("eval \$(aws ecr get-login --no-include-email --region eu-west-2 | sed 's|https://||')")
-              docker.withRegistry("https://$ECRURL"){
-              docker.image("$IMAGE").push("dev-staging-$BUILD_NUMBER")  
-              }
-            }
-
         }
     }
 
