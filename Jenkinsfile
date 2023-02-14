@@ -85,12 +85,12 @@ pipeline {
 
         steps {
             script{
-                def response = sh(script: 'curl https://localhost:5001', returnStdout: true)
-
+                def response = sh(script: 'curl https://localhost:8085, returnStdout: true).trim()
                 echo "HTTP response status code: $code"
-                    if (code == 200) {
-                    echo response
-                }
+
+                        if (code == 200) {
+                            echo response
+                        }
             }           
         }
     }
